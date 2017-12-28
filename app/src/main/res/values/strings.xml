@@ -1,0 +1,39 @@
+<resources>
+    <string name="app_name">FillTool</string>
+
+    <string name="ram_fill_title">Fill RAM Memory</string>
+    <string name="rom_fill_title">Fill ROM/SDCard Memory</string>
+    <string name="Sms_fill_title">Fill Sms</string>
+    <string name="call_log_fill_title">Fill CallLog</string>
+    <string name="contact_fill_title">Fill Contact</string>
+
+    <string name="ram_fill_button">RAM填充</string>
+    <string name="rom_fill_button">ROM/SDCard填充</string>
+    <string name="sms_fill_button">短信填充</string>
+    <string name="contact_fill_button">联系人填充</string>
+    <string name="call_log_fill_button">通话记录填充</string>
+
+    <string name="fill_size_name">大小(M)：</string>
+    <string name="edit_memory_size_name">请输入要填充内存大小(M)</string>
+    <string name="fill_ram">填充RAM</string>
+    <string name="release_ram">释放RAM</string>
+    <string name="update_ram">当前RAM</string>
+    <string name="fill_rom">填充ROM</string>
+    <string name="release_rom">释放ROM</string>
+    <string name="fill_sdcard">填充SDCard</string>
+    <string name="release_sdcard">释放SDCard</string>
+    <string name="edit_sms_size">请输入填充短信的数量</string>
+    <string name="fill_sms">填充短信</string>
+    <string name="release_sms">删除所有短信</string>
+    <string name="calllog_num_edit_text">请输入填充通话记录的数量</string>
+    <string name="calllog_num_text_view">通话记录条数</string>
+    <string name="addcalllog">填充通话记录</string>
+    <string name="deletecalllog">清空通话记录</string>
+    <string name="add_contact_num_edit_text">请输入填充联系人的数量</string>
+    <string name="local_contacts_num_text_view">当前本地联系人数</string>
+    <string name="sim_contacts_num_text_view">当前SIM卡联系人数</string>
+    <string name="add_local_contact">填充到本地</string>
+    <string name="add_sim_contact">填充到SIM卡</string>
+    <string name="delete_local_contact">清空本地联系人</string>
+    <string name="delete_sim_contact">清空SIM卡联系人</string>
+</resources>

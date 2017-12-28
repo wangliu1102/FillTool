@@ -1,0 +1,110 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+    <!--自定义标题栏-->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="@color/colorPrimary">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="16dp"
+            android:gravity="center_vertical"
+            android:text="@string/contact_fill_title"
+            android:textColor="#fff"
+            android:textSize="20sp"
+            android:textStyle="bold"/>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="16dp">
+
+        <EditText
+            android:id="@+id/add_num_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="80dp"
+            android:gravity="center"
+            android:hint="@string/add_contact_num_edit_text"
+            android:inputType="number"
+            android:maxLines="1"/>
+
+        <TextView
+            android:id="@+id/contacts_num_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="140dp"
+            android:gravity="center"
+            android:textColor="#000000"
+            android:textSize="20sp"
+            tools:text="@string/local_contacts_num_text_view"/>
+
+        <TextView
+            android:id="@+id/contacts_num_text_view2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="175dp"
+            android:gravity="center"
+            android:textColor="#000000"
+            android:textSize="20sp"
+            tools:text="@string/sim_contacts_num_text_view"/>
+
+
+        <Button
+            android:id="@+id/AddButton"
+            android:layout_width="130dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:background="@drawable/btn_selector"
+            android:layout_marginLeft="25dp"
+            android:layout_marginTop="230dp"
+            android:textColor="#fff"
+            android:textStyle="bold"
+            android:text="@string/add_local_contact"/>
+        <Button
+            android:id="@+id/AddButton2"
+            android:layout_width="130dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:background="@drawable/btn_selector"
+            android:layout_marginLeft="25dp"
+            android:layout_marginTop="330dp"
+            android:textColor="#fff"
+            android:textStyle="bold"
+            android:text="@string/add_sim_contact"/>
+
+        <Button
+            android:id="@+id/DeleteButton"
+            android:layout_width="130dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:background="@drawable/btn_selector"
+            android:layout_marginLeft="190dp"
+            android:layout_marginTop="230dp"
+            android:textColor="#fff"
+            android:textStyle="bold"
+            android:text="@string/delete_local_contact"/>
+
+
+        <Button
+            android:id="@+id/DeleteButton2"
+            android:layout_width="130dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:background="@drawable/btn_selector"
+            android:layout_marginLeft="190dp"
+            android:layout_marginTop="330dp"
+            android:textColor="#fff"
+            android:textStyle="bold"
+            android:text="@string/delete_sim_contact"/>
+
+
+    </RelativeLayout>
+
+</RelativeLayout>
