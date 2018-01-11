@@ -1,13 +1,16 @@
 package com.wl.android.filltool.service;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -26,12 +29,15 @@ public class RamFillKeepLiveService extends Service {
 
     public static final int NOTIFICATION_ID = 0x11;
     private static final String TAG = "RamFillKeepLiveService";
+    private static final String id = "channel_1";
+    private static final String name = "channel_name_1";
 
     private boolean mConnecting = false;
     private boolean mIsClickable = true;
     private MemFillTool mMemFillTool = MemFillTool.getInstance();
     private List<Long> mPList = new ArrayList<>();
     private long mPInt = 0;
+    private NotificationManager manager;
 
     public RamFillKeepLiveService() {
     }
@@ -124,18 +130,44 @@ public class RamFillKeepLiveService extends Service {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
 
         PendingIntent pend = PendingIntent.getActivity(this, 0, intent, 0);
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
-                .setWhen(System.currentTimeMillis())
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setStyle(new NotificationCompat.BigTextStyle())
-                .setContentText("是否低内存状态："
-                        + GetRamRomSdUtil.getlowMemory(getApplicationContext())
-                        + "\n\n" + "当前可用RAM大小："
-                        + GetRamRomSdUtil.formatSize(GetRamRomSdUtil.getAvailMemory(getApplicationContext())))
-                .setContentIntent(pend);
+        Notification.Builder mBuilder;
+        if (Build.VERSION.SDK_INT >= 26) {
+            createNotificationChannel();
+            mBuilder = new Notification.Builder(this, id)
+                    .setWhen(System.currentTimeMillis())
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setStyle(new Notification.BigTextStyle())
+                    .setContentText("是否低内存状态："
+                            + GetRamRomSdUtil.getlowMemory(getApplicationContext())
+                            + "\n\n" + "当前可用RAM大小："
+                            + GetRamRomSdUtil.formatSize(GetRamRomSdUtil.getAvailMemory(getApplicationContext())))
+                    .setContentIntent(pend);
+        } else {
+            mBuilder = new Notification.Builder(this)
+                    .setWhen(System.currentTimeMillis())
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setStyle(new Notification.BigTextStyle())
+                    .setContentText("是否低内存状态："
+                            + GetRamRomSdUtil.getlowMemory(getApplicationContext())
+                            + "\n\n" + "当前可用RAM大小："
+                            + GetRamRomSdUtil.formatSize(GetRamRomSdUtil.getAvailMemory(getApplicationContext())))
+                    .setContentIntent(pend);
+        }
         return mBuilder.build();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void createNotificationChannel() {
+        NotificationChannel channel = new NotificationChannel(id, name, NotificationManager.IMPORTANCE_HIGH);
+        getManager().createNotificationChannel(channel);
+    }
+
+    private NotificationManager getManager() {
+        if (manager == null) {
+            manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        }
+        return manager;
+    }
 
     @Override
     public void onDestroy() {
