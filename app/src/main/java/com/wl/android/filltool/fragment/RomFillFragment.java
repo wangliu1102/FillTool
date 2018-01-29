@@ -14,8 +14,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +43,7 @@ public class RomFillFragment extends Fragment {
     private File mFile; // ROM路径下文件
     private File mSdFile = null; //外部sd路径下文件
 
+    private Spinner mSpinner;
     private EditText mSizeEditText;
     private TextView mRomAllTextView;
     private TextView mRomAvailableTextView;
@@ -61,6 +65,8 @@ public class RomFillFragment extends Fragment {
     boolean mIsReleaseRomOrSd = false; //true是ROM，false是SDCard
     private List<Integer> mNList = new ArrayList<>(); // 保存SD卡文件标志名
     private int n = 0;
+    private boolean mIsSize = true;
+    long availableSize = 0L;
 
     /**
      * 异步处理释放内存的Handler
@@ -102,11 +108,41 @@ public class RomFillFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_rom_fill, container, false);
 
+        mSpinner = (Spinner) v.findViewById(R.id.rom_spinner);
+        List<String> list = new ArrayList<>();
+        list.add("大小(M)");
+        list.add("百分比(%)");
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(getActivity(),
+                android.R.layout.simple_list_item_1, list);
+        mSpinner.setAdapter(arrayAdapter);
+        mSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selected = parent.getItemAtPosition(position).toString();
+                if (selected.equals("大小(M)")) {
+                    mSizeEditText.setHint(R.string.edit_memory_size_name);
+                    mIsSize = true;
+                    mSizeEditText.setText("");
+                } else if (selected.equals("百分比(%)")) {
+                    mSizeEditText.setHint(R.string.edit_memory_percentage_name);
+                    mIsSize = false;
+                    mSizeEditText.setText("");
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
         mSizeEditText = (EditText) v.findViewById(R.id.size_edit_text);
         mRomAllTextView = (TextView) v.findViewById(R.id.rom_all_text_view);
         mRomAvailableTextView = (TextView) v.findViewById(R.id.rom_available_text_view);
+
         mAddRomButton = (Button) v.findViewById(R.id.add_rom_button);
         mReleaseRomButton = (Button) v.findViewById(R.id.release_rom_button);
+
         mSDCardAllTextView = (TextView) v.findViewById(R.id.sdcard_all_text_view);
         mSDCardAvailableTextView = (TextView) v.findViewById(R.id.sdcard_available_text_view);
         mAddSDCardButton = (Button) v.findViewById(R.id.add_sdcard_button);
@@ -160,6 +196,7 @@ public class RomFillFragment extends Fragment {
                 releaseMem();
             }
         });
+
 
         return v;
     }
@@ -254,20 +291,38 @@ public class RomFillFragment extends Fragment {
      */
     private void addMem() {
         String mEdit = mSizeEditText.getText().toString();
+
         if (!TextUtils.isEmpty(mEdit)) {
             if (mEdit.startsWith("0")) {
                 Toast.makeText(getActivity(), "输入不能以 0 开头！", Toast.LENGTH_SHORT).show();
             } else {
                 mFileSize = Integer.parseInt(mEdit);
-                long availableSize = 0L;
-                long size = mFileSize * 1024 * 1024L;
+                long size = 0L;
+                boolean isMore = true;
                 if (mIsAddRomOrSd) { // 是ROM
                     availableSize = GetRamRomSdUtil.getAvailableInternalStorgeSize();
                 } else {
                     availableSize = GetRamRomSdUtil.getAvailableExternalStorgeSize(getActivity());
                 }
+                if (mIsSize) {
+                    size = mFileSize * 1024 * 1024L;
+                } else {
+                    if (mIsAddRomOrSd) {
+                        if (mFileSize < 100) {
+                            isMore = true;
+                        } else {
+                            isMore = false;
+                        }
+                    } else {
+                        if (mFileSize <= 100) {
+                            isMore = true;
+                        } else {
+                            isMore = false;
+                        }
+                    }
+                }
                 Log.d(TAG, "size:" + size);
-                if (size < availableSize) {
+                if (size < availableSize && isMore) {
                     if (!mIsAdd) {
                         writeFileTask = new WriteFileTask();
                         writeFileTask.execute(mFileSize);
@@ -302,6 +357,18 @@ public class RomFillFragment extends Fragment {
         mSDCardAvailableTextView.setText("SDCard可用大小：" +
                 GetRamRomSdUtil.formatSize(GetRamRomSdUtil.getAvailableExternalStorgeSize(getActivity())));
 
+        if (GetRamRomSdUtil.getAvailableInternalStorgeSize() == 0L) {
+            mAddRomButton.setEnabled(false);
+        } else {
+            mAddRomButton.setEnabled(true);
+        }
+
+        if (GetRamRomSdUtil.getAvailableExternalStorgeSize(getActivity()) == 0L) {
+            mAddSDCardButton.setEnabled(false);
+        } else {
+            mAddSDCardButton.setEnabled(true);
+        }
+
     }
 
     /**
@@ -314,6 +381,7 @@ public class RomFillFragment extends Fragment {
     public int getNum(int start, int end) {
         return (int) (Math.random() * (end - start + 1) + start);
     }
+
 
     /**
      * 异步任务，处理ROM内存填充
@@ -341,34 +409,80 @@ public class RomFillFragment extends Fragment {
                             writeFileTask = null;
                         }
                     });
-            mProgressDialog.setMax(mFileSize);
+            if (mIsSize) {
+                mProgressDialog.setMax(mFileSize);
+            } else {
+                mProgressDialog.setMax(100); // 百分比填充
+            }
             mProgressDialog.show();
             mIsAdd = true;
         }
 
         @Override
         protected Integer doInBackground(Integer... params) {
-            int size = params[0];
+            int sizeLong = params[0];
+            int sizeM = 0;
+            int sizeB = 0;
+            if (mIsSize) {
+                sizeM = sizeLong;
+            } else {
+                long totalSize = 0L;
+                if (mIsAddRomOrSd) {
+                    totalSize = GetRamRomSdUtil.getTotalInternalStorgeSize();
+                } else {
+                    totalSize = GetRamRomSdUtil.getTotalExternalStorgeSize(getActivity());
+                }
+
+                int size = (int) ((availableSize - (((100 - sizeLong) / 100D) * totalSize)) / 1024 / 1024);
+                Log.d(TAG, "size2:" + size);
+                if (size >= 1) {
+                    sizeM = size;
+                    sizeB = (int) ((long) (availableSize - (((100 - sizeLong) / 100D) * totalSize)) - (sizeM * 1024 * 1024));
+                    Log.d(TAG, "sizeB:" + sizeB);
+                } else {
+                    sizeB = (int) (availableSize - (((100 - sizeLong) / 100D) * totalSize));
+                    Log.d(TAG, "sizeB2:" + sizeB);
+                    if (sizeB <= 0) {
+                        return 2;
+                    }
+                }
+            }
+
             try {
                 File file = null;
                 if (mIsAddRomOrSd) {
                     file = mFile;
                     RandomAccessFile raf = new RandomAccessFile(file, "rw");
                     raf.seek(raf.length());//每次从文件末尾写入
-                    for (int i = 0; i < size; i++) {//一共写入size兆,想写多大的文件改变这个值就行
+                    for (int i = 0; i < sizeM; i++) {//一共写入size兆,想写多大的文件改变这个值就行
                         if (isCancelled()) {
                             break;
                         }
                         byte[] buffer = new byte[1024 * 1024]; //1次1M，这样内存开的大一些，又不是特别大。
                         raf.write(buffer);
-                        publishProgress(i + 1);
+                        if (mIsSize) {
+                            publishProgress(i + 1);
+                        } else {
+                            if (sizeB == 0) {
+                                publishProgress((int) (((float) (i + 1)) / sizeM * 100));
+                            } else {
+                                publishProgress((int) (((float) (i + 1)) / (sizeM + 1) * 100));
+                            }
+                        }
+                    }
+                    if (!isCancelled()) {
+                        if (sizeB != 0) {
+                            byte[] buffer = new byte[sizeB];
+                            raf.write(buffer);
+                            publishProgress(100);
+                        }
                     }
                     raf.close();
                 } else {
                     int limitSize = 4 * 1024 - 1; // SDCard保存的文件大小不能超过4G
                     int num = 1;
-                    if (size > limitSize) {
-                        num = size / limitSize + 1; // 获得要填充的文件数量
+                    if (sizeM > limitSize) {
+                        num = sizeM / limitSize + 1; // 获得要填充的文件数量
                         for (int j = 0; j < num; j++) {
                             while (true) {
                                 n = getNum(0, 9999);
@@ -380,13 +494,28 @@ public class RomFillFragment extends Fragment {
                             file = new File(mSdFile, "abc" + n + ".txt");
                             RandomAccessFile raf = new RandomAccessFile(file, "rw");
                             if (j == (num - 1)) { // 填充最后一个文件
-                                for (int i = 0; i < (size % limitSize); i++) {
+                                for (int i = 0; i < (sizeM % limitSize); i++) {
                                     if (isCancelled()) {
                                         return null;
                                     }
                                     byte[] buffer = new byte[1024 * 1024];
                                     raf.write(buffer);
-                                    publishProgress(j * limitSize + (i + 1));
+                                    if (mIsSize) {
+                                        publishProgress(j * limitSize + (i + 1));
+                                    } else {
+                                        if (sizeB == 0) {
+                                            publishProgress((int) (((float) ((j * limitSize + (i + 1)))) / sizeM * 100));
+                                        } else {
+                                            publishProgress((int) (((float) ((j * limitSize + (i + 1)))) / (sizeM + 1) * 100));
+                                        }
+                                    }
+                                }
+                                if (!isCancelled()) {
+                                    if (sizeB != 0) {
+                                        byte[] buffer = new byte[sizeB];
+                                        raf.write(buffer);
+                                        publishProgress(100);
+                                    }
                                 }
                                 raf.close();
                             } else {
@@ -396,7 +525,15 @@ public class RomFillFragment extends Fragment {
                                     }
                                     byte[] buffer = new byte[1024 * 1024];
                                     raf.write(buffer);
-                                    publishProgress(j * limitSize + (i + 1));
+                                    if (mIsSize) {
+                                        publishProgress(j * limitSize + (i + 1));
+                                    } else {
+                                        if (sizeB == 0) {
+                                            publishProgress((int) (((float) ((j * limitSize + (i + 1)))) / sizeM * 100));
+                                        } else {
+                                            publishProgress((int) (((float) ((j * limitSize + (i + 1)))) / (sizeM + 1) * 100));
+                                        }
+                                    }
                                 }
                                 raf.close();
                             }
@@ -412,13 +549,30 @@ public class RomFillFragment extends Fragment {
                         }
                         file = new File(mSdFile, "abc" + n + ".txt");
                         RandomAccessFile raf = new RandomAccessFile(file, "rw");
-                        for (int i = 0; i < size; i++) {//一共写入size兆,想写多大的文件改变这个值就行
+                        for (int i = 0; i < sizeM; i++) {//一共写入size兆,想写多大的文件改变这个值就行
                             if (isCancelled()) {
                                 break;
                             }
                             byte[] buffer = new byte[1024 * 1024]; //1次1M，这样内存开的大一些，又不是特别大。
                             raf.write(buffer);
-                            publishProgress(i + 1);
+                            if (mIsSize) {
+                                publishProgress(i + 1);
+                            } else {
+                                if (sizeB == 0) {
+                                    publishProgress((int) (((float) (i + 1)) / sizeM * 100));
+                                } else {
+                                    publishProgress((int) (((float) (i + 1)) / (sizeM + 1) * 100));
+                                }
+                            }
+                        }
+                        if (!isCancelled()) {
+                            if (sizeB != 0) {
+                                Log.d(TAG, "wangliu:" + sizeB);
+                                byte[] buffer = new byte[sizeB];
+                                raf.write(buffer);
+                                Log.d(TAG, "wangliu2:" + GetRamRomSdUtil.getAvailableExternalStorgeSize(getActivity()));
+                                publishProgress(100);
+                            }
                         }
                         raf.close();
                     }
@@ -455,6 +609,12 @@ public class RomFillFragment extends Fragment {
                 case 1:
                     updateRom();
                     Toast.makeText(getActivity(), "填充失败", Toast.LENGTH_SHORT).show();
+                    mProgressDialog.incrementProgressBy(-mProgressDialog.getProgress());
+                    break;
+                case 2:
+                    updateRom();
+                    Toast.makeText(getActivity(), "填充内存小于或等于1字节，不能填充！",
+                            Toast.LENGTH_SHORT).show();
                     mProgressDialog.incrementProgressBy(-mProgressDialog.getProgress());
                     break;
                 default:

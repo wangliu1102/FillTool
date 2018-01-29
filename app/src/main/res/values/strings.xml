@@ -15,6 +15,7 @@
 
     <string name="fill_size_name">大小(M)：</string>
     <string name="edit_memory_size_name">请输入要填充内存大小(M)</string>
+    <string name="edit_memory_percentage_name">请输入要填充内存比例(%)</string>
     <string name="fill_ram">填充RAM</string>
     <string name="release_ram">释放RAM</string>
     <string name="update_ram">当前RAM</string>
