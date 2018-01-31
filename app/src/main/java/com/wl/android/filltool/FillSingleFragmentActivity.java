@@ -41,13 +41,18 @@ public abstract class FillSingleFragmentActivity extends AppCompatActivity {
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG)
                 != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CALL_LOG)
+                != PackageManager.PERMISSION_GRANTED
                 || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
+                != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS)
                 != PackageManager.PERMISSION_GRANTED
                 || ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_SMS)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_CALL_LOG,
-                            Manifest.permission.READ_CONTACTS, Manifest.permission.READ_SMS}, 1);
+                    new String[]{Manifest.permission.READ_CALL_LOG,Manifest.permission.WRITE_CALL_LOG,
+                            Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS,
+                            Manifest.permission.READ_SMS}, 1);
         }
         loadFragment();
     }
@@ -69,7 +74,9 @@ public abstract class FillSingleFragmentActivity extends AppCompatActivity {
             case 1:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
                         && grantResults[1] == PackageManager.PERMISSION_GRANTED
-                        && grantResults[2] == PackageManager.PERMISSION_GRANTED) {
+                        && grantResults[2] == PackageManager.PERMISSION_GRANTED
+                        && grantResults[3] == PackageManager.PERMISSION_GRANTED
+                        && grantResults[3] == PackageManager.PERMISSION_GRANTED) {
 
                 } else {
                     this.finish();
