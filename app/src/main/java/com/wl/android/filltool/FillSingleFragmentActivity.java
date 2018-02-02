@@ -76,7 +76,7 @@ public abstract class FillSingleFragmentActivity extends AppCompatActivity {
                         && grantResults[1] == PackageManager.PERMISSION_GRANTED
                         && grantResults[2] == PackageManager.PERMISSION_GRANTED
                         && grantResults[3] == PackageManager.PERMISSION_GRANTED
-                        && grantResults[3] == PackageManager.PERMISSION_GRANTED) {
+                        && grantResults[4] == PackageManager.PERMISSION_GRANTED) {
 
                 } else {
                     this.finish();
