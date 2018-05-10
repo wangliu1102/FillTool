@@ -48,11 +48,13 @@ public abstract class FillSingleFragmentActivity extends AppCompatActivity {
                 || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS)
                 != PackageManager.PERMISSION_GRANTED
                 || ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_SMS)
+                != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.READ_CALL_LOG,Manifest.permission.WRITE_CALL_LOG,
                             Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS,
-                            Manifest.permission.READ_SMS}, 1);
+                            Manifest.permission.READ_SMS,Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         }
         loadFragment();
     }
@@ -76,7 +78,8 @@ public abstract class FillSingleFragmentActivity extends AppCompatActivity {
                         && grantResults[1] == PackageManager.PERMISSION_GRANTED
                         && grantResults[2] == PackageManager.PERMISSION_GRANTED
                         && grantResults[3] == PackageManager.PERMISSION_GRANTED
-                        && grantResults[4] == PackageManager.PERMISSION_GRANTED) {
+                        && grantResults[4] == PackageManager.PERMISSION_GRANTED
+                        && grantResults[5] == PackageManager.PERMISSION_GRANTED) {
 
                 } else {
                     this.finish();

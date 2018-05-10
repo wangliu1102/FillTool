@@ -159,6 +159,7 @@ public class RamFillKeepLiveService extends Service {
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void createNotificationChannel() {
         NotificationChannel channel = new NotificationChannel(id, name, NotificationManager.IMPORTANCE_HIGH);
+        channel.setImportance(NotificationManager.IMPORTANCE_LOW);
         getManager().createNotificationChannel(channel);
     }
 

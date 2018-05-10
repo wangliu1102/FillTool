@@ -93,7 +93,11 @@ public class RomFillFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mFile = new File("/data/data/" + getActivity().getPackageName() + "/text.txt");
+        mFile = new File(GetRamRomSdUtil.getStoragePath(getActivity(), false) + "/Android/abc/");
+        if (!mFile.exists()) {
+            mFile.mkdirs();
+        }
+        Log.d(TAG, GetRamRomSdUtil.getStoragePath(getActivity(), false) + "/Android/abc/");
         SharedPreferences preferDataList = getActivity().getSharedPreferences("nList", MODE_PRIVATE);
         int environNums = preferDataList.getInt("nNums", 0);
         for (int i = 0; i < environNums; i++) {
@@ -230,19 +234,37 @@ public class RomFillFragment extends Fragment {
         }
         if (file.exists() && !mIsDelete) {
             if (mIsReleaseRomOrSd) {
-                mProgressDialog2 = ProgressDialog.show(getActivity(), "释放内存",
-                        "正在释放ROM内存，请稍后...");
-                mIsDelete = true;
-                final File finalFile = file;
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Boolean b = finalFile.delete();
-                        Message msg = new Message();
-                        msg.obj = b;
-                        mHandler.sendMessageDelayed(msg, 1000);
-                    }
-                }).start();
+//                mProgressDialog2 = ProgressDialog.show(getActivity(), "释放内存",
+//                        "正在释放ROM内存，请稍后...");
+//                mIsDelete = true;
+//                final File finalFile = file;
+//                new Thread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        Boolean b = finalFile.delete();
+//                        Message msg = new Message();
+//                        msg.obj = b;
+//                        mHandler.sendMessageDelayed(msg, 1000);
+//                    }
+//                }).start();
+                File[] files = file.listFiles();
+                if (files.length == 0) {
+                    Toast.makeText(getActivity(), "正常内存，无需释放", Toast.LENGTH_SHORT).show();
+                } else {
+                    mProgressDialog2 = ProgressDialog.show(getActivity(), "释放内存",
+                            "正在释放ROM内存，请稍后...");
+                    mIsDelete = true;
+                    final File finalFile = file;
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Boolean b = deleteDir(finalFile);
+                            Message msg = new Message();
+                            msg.obj = b;
+                            mHandler.sendMessageDelayed(msg, 1000);
+                        }
+                    }).start();
+                }
             } else {
                 File[] files = file.listFiles();
                 if (files.length == 0) {
@@ -278,6 +300,7 @@ public class RomFillFragment extends Fragment {
         Boolean b = false;
         File[] files = dir.listFiles();
         for (int i = 0; i < files.length; i++) {
+            Log.d(TAG, "files[i].getPath():" + files[i].getPath());
             b = files[i].delete();
             if (!b) {
                 return b;
@@ -448,12 +471,223 @@ public class RomFillFragment extends Fragment {
                 }
             }
 
+//            try {
+//                File file = null;
+//                if (mIsAddRomOrSd) {
+//                    file = mFile;
+//                    RandomAccessFile raf = new RandomAccessFile(file, "rw");
+//                    raf.seek(raf.length());//每次从文件末尾写入
+//                    for (int i = 0; i < sizeM; i++) {//一共写入size兆,想写多大的文件改变这个值就行
+//                        if (isCancelled()) {
+//                            break;
+//                        }
+//                        byte[] buffer = new byte[1024 * 1024]; //1次1M，这样内存开的大一些，又不是特别大。
+//                        raf.write(buffer);
+//                        if (mIsSize) {
+//                            publishProgress(i + 1);
+//                        } else {
+//                            if (sizeB == 0) {
+//                                publishProgress((int) (((float) (i + 1)) / sizeM * 100));
+//                            } else {
+//                                publishProgress((int) (((float) (i + 1)) / (sizeM + 1) * 100));
+//                            }
+//                        }
+//                    }
+//                    if (!isCancelled()) {
+//                        if (sizeB != 0) {
+//                            byte[] buffer = new byte[sizeB];
+//                            raf.write(buffer);
+//                            publishProgress(100);
+//                        }
+//                    }
+//                    raf.close();
+//                } else {
+//                    int limitSize = 4 * 1024 - 1; // SDCard保存的文件大小不能超过4G
+//                    int num = 1;
+//                    if (sizeM > limitSize) {
+//                        num = sizeM / limitSize + 1; // 获得要填充的文件数量
+//                        for (int j = 0; j < num; j++) {
+//                            while (true) {
+//                                n = getNum(0, 9999);
+//                                if (!mNList.contains(n)) {
+//                                    mNList.add(n);
+//                                    break;
+//                                }
+//                            }
+//                            file = new File(mSdFile, "abc" + n + ".txt");
+//                            RandomAccessFile raf = new RandomAccessFile(file, "rw");
+//                            if (j == (num - 1)) { // 填充最后一个文件
+//                                for (int i = 0; i < (sizeM % limitSize); i++) {
+//                                    if (isCancelled()) {
+//                                        return null;
+//                                    }
+//                                    byte[] buffer = new byte[1024 * 1024];
+//                                    raf.write(buffer);
+//                                    if (mIsSize) {
+//                                        publishProgress(j * limitSize + (i + 1));
+//                                    } else {
+//                                        if (sizeB == 0) {
+//                                            publishProgress((int) (((float) ((j * limitSize + (i + 1)))) / sizeM * 100));
+//                                        } else {
+//                                            publishProgress((int) (((float) ((j * limitSize + (i + 1)))) / (sizeM + 1) * 100));
+//                                        }
+//                                    }
+//                                }
+//                                if (!isCancelled()) {
+//                                    if (sizeB != 0) {
+//                                        byte[] buffer = new byte[sizeB];
+//                                        raf.write(buffer);
+//                                        publishProgress(100);
+//                                    }
+//                                }
+//                                raf.close();
+//                            } else {
+//                                for (int i = 0; i < limitSize; i++) {
+//                                    if (isCancelled()) {
+//                                        return null;
+//                                    }
+//                                    byte[] buffer = new byte[1024 * 1024];
+//                                    raf.write(buffer);
+//                                    if (mIsSize) {
+//                                        publishProgress(j * limitSize + (i + 1));
+//                                    } else {
+//                                        if (sizeB == 0) {
+//                                            publishProgress((int) (((float) ((j * limitSize + (i + 1)))) / sizeM * 100));
+//                                        } else {
+//                                            publishProgress((int) (((float) ((j * limitSize + (i + 1)))) / (sizeM + 1) * 100));
+//                                        }
+//                                    }
+//                                }
+//                                raf.close();
+//                            }
+//                        }
+//
+//                    } else {
+//                        while (true) {
+//                            n = getNum(0, 9999);
+//                            if (!mNList.contains(n)) {
+//                                mNList.add(n);
+//                                break;
+//                            }
+//                        }
+//                        file = new File(mSdFile, "abc" + n + ".txt");
+//                        RandomAccessFile raf = new RandomAccessFile(file, "rw");
+//                        for (int i = 0; i < sizeM; i++) {//一共写入size兆,想写多大的文件改变这个值就行
+//                            if (isCancelled()) {
+//                                break;
+//                            }
+//                            byte[] buffer = new byte[1024 * 1024]; //1次1M，这样内存开的大一些，又不是特别大。
+//                            raf.write(buffer);
+//                            if (mIsSize) {
+//                                publishProgress(i + 1);
+//                            } else {
+//                                if (sizeB == 0) {
+//                                    publishProgress((int) (((float) (i + 1)) / sizeM * 100));
+//                                } else {
+//                                    publishProgress((int) (((float) (i + 1)) / (sizeM + 1) * 100));
+//                                }
+//                            }
+//                        }
+//                        if (!isCancelled()) {
+//                            if (sizeB != 0) {
+//                                Log.d(TAG, "wangliu:" + sizeB);
+//                                byte[] buffer = new byte[sizeB];
+//                                raf.write(buffer);
+//                                Log.d(TAG, "wangliu2:" + GetRamRomSdUtil.getAvailableExternalStorgeSize(getActivity()));
+//                                publishProgress(100);
+//                            }
+//                        }
+//                        raf.close();
+//                    }
+//                }
+//                return 0;
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                Log.d(TAG, "doInBackground: " + e.toString());
+//            }
+
             try {
                 File file = null;
-                if (mIsAddRomOrSd) {
-                    file = mFile;
+                int limitSize = 4 * 1024 - 1; // SDCard保存的文件大小不能超过4G
+                int num = 1;
+                if (sizeM > limitSize) {
+                    num = sizeM / limitSize + 1; // 获得要填充的文件数量
+                    for (int j = 0; j < num; j++) {
+                        while (true) {
+                            n = getNum(0, 9999);
+                            if (!mNList.contains(n)) {
+                                mNList.add(n);
+                                break;
+                            }
+                        }
+                        if (mIsAddRomOrSd) {
+                            file = new File(mFile, "abc" + n + ".txt");
+
+                        } else {
+                            file = new File(mSdFile, "abc" + n + ".txt");
+                        }
+                        RandomAccessFile raf = new RandomAccessFile(file, "rw");
+                        if (j == (num - 1)) { // 填充最后一个文件
+                            for (int i = 0; i < (sizeM % limitSize); i++) {
+                                if (isCancelled()) {
+                                    return null;
+                                }
+                                byte[] buffer = new byte[1024 * 1024];
+                                raf.write(buffer);
+                                if (mIsSize) {
+                                    publishProgress(j * limitSize + (i + 1));
+                                } else {
+                                    if (sizeB == 0) {
+                                        publishProgress((int) (((float) ((j * limitSize + (i + 1)))) / sizeM * 100));
+                                    } else {
+                                        publishProgress((int) (((float) ((j * limitSize + (i + 1)))) / (sizeM + 1) * 100));
+                                    }
+                                }
+                            }
+                            if (!isCancelled()) {
+                                if (sizeB != 0) {
+                                    byte[] buffer = new byte[sizeB];
+                                    raf.write(buffer);
+                                    publishProgress(100);
+                                }
+                            }
+                            raf.close();
+                        } else {
+                            for (int i = 0; i < limitSize; i++) {
+                                if (isCancelled()) {
+                                    return null;
+                                }
+                                byte[] buffer = new byte[1024 * 1024];
+                                raf.write(buffer);
+                                if (mIsSize) {
+                                    publishProgress(j * limitSize + (i + 1));
+                                } else {
+                                    if (sizeB == 0) {
+                                        publishProgress((int) (((float) ((j * limitSize + (i + 1)))) / sizeM * 100));
+                                    } else {
+                                        publishProgress((int) (((float) ((j * limitSize + (i + 1)))) / (sizeM + 1) * 100));
+                                    }
+                                }
+                            }
+                            raf.close();
+                        }
+                    }
+
+                } else {
+                    while (true) {
+                        n = getNum(0, 9999);
+                        if (!mNList.contains(n)) {
+                            mNList.add(n);
+                            break;
+                        }
+                    }
+                    if (mIsAddRomOrSd) {
+                        file = new File(mFile, "abc" + n + ".txt");
+
+                    } else {
+                        file = new File(mSdFile, "abc" + n + ".txt");
+                    }
                     RandomAccessFile raf = new RandomAccessFile(file, "rw");
-                    raf.seek(raf.length());//每次从文件末尾写入
                     for (int i = 0; i < sizeM; i++) {//一共写入size兆,想写多大的文件改变这个值就行
                         if (isCancelled()) {
                             break;
@@ -472,111 +706,15 @@ public class RomFillFragment extends Fragment {
                     }
                     if (!isCancelled()) {
                         if (sizeB != 0) {
+                            Log.d(TAG, "wangliu:" + sizeB);
                             byte[] buffer = new byte[sizeB];
                             raf.write(buffer);
                             publishProgress(100);
                         }
                     }
                     raf.close();
-                } else {
-                    int limitSize = 4 * 1024 - 1; // SDCard保存的文件大小不能超过4G
-                    int num = 1;
-                    if (sizeM > limitSize) {
-                        num = sizeM / limitSize + 1; // 获得要填充的文件数量
-                        for (int j = 0; j < num; j++) {
-                            while (true) {
-                                n = getNum(0, 9999);
-                                if (!mNList.contains(n)) {
-                                    mNList.add(n);
-                                    break;
-                                }
-                            }
-                            file = new File(mSdFile, "abc" + n + ".txt");
-                            RandomAccessFile raf = new RandomAccessFile(file, "rw");
-                            if (j == (num - 1)) { // 填充最后一个文件
-                                for (int i = 0; i < (sizeM % limitSize); i++) {
-                                    if (isCancelled()) {
-                                        return null;
-                                    }
-                                    byte[] buffer = new byte[1024 * 1024];
-                                    raf.write(buffer);
-                                    if (mIsSize) {
-                                        publishProgress(j * limitSize + (i + 1));
-                                    } else {
-                                        if (sizeB == 0) {
-                                            publishProgress((int) (((float) ((j * limitSize + (i + 1)))) / sizeM * 100));
-                                        } else {
-                                            publishProgress((int) (((float) ((j * limitSize + (i + 1)))) / (sizeM + 1) * 100));
-                                        }
-                                    }
-                                }
-                                if (!isCancelled()) {
-                                    if (sizeB != 0) {
-                                        byte[] buffer = new byte[sizeB];
-                                        raf.write(buffer);
-                                        publishProgress(100);
-                                    }
-                                }
-                                raf.close();
-                            } else {
-                                for (int i = 0; i < limitSize; i++) {
-                                    if (isCancelled()) {
-                                        return null;
-                                    }
-                                    byte[] buffer = new byte[1024 * 1024];
-                                    raf.write(buffer);
-                                    if (mIsSize) {
-                                        publishProgress(j * limitSize + (i + 1));
-                                    } else {
-                                        if (sizeB == 0) {
-                                            publishProgress((int) (((float) ((j * limitSize + (i + 1)))) / sizeM * 100));
-                                        } else {
-                                            publishProgress((int) (((float) ((j * limitSize + (i + 1)))) / (sizeM + 1) * 100));
-                                        }
-                                    }
-                                }
-                                raf.close();
-                            }
-                        }
-
-                    } else {
-                        while (true) {
-                            n = getNum(0, 9999);
-                            if (!mNList.contains(n)) {
-                                mNList.add(n);
-                                break;
-                            }
-                        }
-                        file = new File(mSdFile, "abc" + n + ".txt");
-                        RandomAccessFile raf = new RandomAccessFile(file, "rw");
-                        for (int i = 0; i < sizeM; i++) {//一共写入size兆,想写多大的文件改变这个值就行
-                            if (isCancelled()) {
-                                break;
-                            }
-                            byte[] buffer = new byte[1024 * 1024]; //1次1M，这样内存开的大一些，又不是特别大。
-                            raf.write(buffer);
-                            if (mIsSize) {
-                                publishProgress(i + 1);
-                            } else {
-                                if (sizeB == 0) {
-                                    publishProgress((int) (((float) (i + 1)) / sizeM * 100));
-                                } else {
-                                    publishProgress((int) (((float) (i + 1)) / (sizeM + 1) * 100));
-                                }
-                            }
-                        }
-                        if (!isCancelled()) {
-                            if (sizeB != 0) {
-                                Log.d(TAG, "wangliu:" + sizeB);
-                                byte[] buffer = new byte[sizeB];
-                                raf.write(buffer);
-                                Log.d(TAG, "wangliu2:" + GetRamRomSdUtil.getAvailableExternalStorgeSize(getActivity()));
-                                publishProgress(100);
-                            }
-                        }
-                        raf.close();
-                    }
                 }
+
                 return 0;
             } catch (Exception e) {
                 e.printStackTrace();
